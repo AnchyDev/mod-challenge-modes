@@ -3,6 +3,7 @@
  */
 
 #include "ChallengeModes.h"
+#include "Tokenize.h"
 
 ChallengeModes* ChallengeModes::instance()
 {
@@ -256,6 +257,96 @@ public:
         }
     }
 
+    PlayerSettingMap* GetPlayerSettingsFromDB(ObjectGuid guid)
+    {
+        PlayerSettingMap* settingMap = new PlayerSettingMap();
+
+        auto result = CharacterDatabase.Query("SELECT source, data FROM character_settings WHERE guid = {}", guid.GetRawValue());
+
+        if (result)
+        {
+            do
+            {
+                Field* fields = result->Fetch();
+
+                std::string source = fields[0].Get<std::string>();
+                std::string data = fields[1].Get<std::string>();
+
+                std::vector<std::string_view> tokens = Acore::Tokenize(data, ' ', false);
+
+                PlayerSettingVector setting;
+                setting.resize(tokens.size());
+
+                uint32 count = 0;
+
+                for (auto token : tokens)
+                {
+                    if (token.empty())
+                    {
+                        continue;
+                    }
+
+                    PlayerSetting set;
+                    set.value = Acore::StringTo<uint32>(token).value();
+                    setting[count] = set;
+                    ++count;
+                }
+
+                (*settingMap)[source] = setting;
+
+            } while (result->NextRow());
+        }
+
+        return settingMap;
+    }
+
+    bool HasPlayerSetting(PlayerSettingMap* m_charSettingsMap, std::string source, uint8 index)
+    {
+        auto itr = m_charSettingsMap->find(source);
+
+        if (itr == m_charSettingsMap->end())
+        {
+            return false;
+        }
+
+        PlayerSettingVector settingVector = itr->second;
+        if (settingVector.size() < (uint8)(index + 1))
+        {
+            return false;
+        }
+
+        return settingVector.at(index).value == 1;
+    }
+
+    bool CanSendMail(Player* player, ObjectGuid receiverGUID, ObjectGuid /*mailbox*/, std::string& /*subject*/, std::string& /*body*/, uint32 /*money*/, uint32 /*COD*/, Item* /*item*/)
+    {
+        auto playerSettings = GetPlayerSettingsFromDB(receiverGUID);
+
+        if (!playerSettings)
+        {
+            return true;
+        }
+
+        if (!sChallengeModes->enabled())
+        {
+            return true;
+        }
+
+        if (sChallengeModes->challengeEnabled(SETTING_HARDCORE) && HasPlayerSetting(playerSettings, "mod-challenge-modes", SETTING_HARDCORE))
+        {
+            ChatHandler(player->GetSession()).SendSysMessage("You can't send mail to hardcore players.");
+            return false;
+        }
+
+        if (sChallengeModes->challengeEnabled(SETTING_HARDCORE) && HasPlayerSetting(playerSettings, "mod-challenge-modes", SETTING_SELF_CRAFTED))
+        {
+            ChatHandler(player->GetSession()).SendSysMessage("You can't send mail to self-crafted players.");
+            return false;
+        }
+
+        return true;
+    }
+
 private:
     ChallengeModeSettings settingName;
 };
@@ -283,6 +374,25 @@ public:
     void OnLevelChanged(Player* player, uint8 oldlevel) override
     {
         ChallengeMode::OnLevelChanged(player, oldlevel);
+    }
+
+    bool CanInitTrade(Player* player, Player* target) override
+    {
+        if (sChallengeModes->challengeEnabledForPlayer(SETTING_HARDCORE, player))
+        {
+            ChatHandler(player->GetSession()).SendSysMessage("You cannot trade with other players while in hardcore mode.");
+
+            return false;
+        }
+
+        if (sChallengeModes->challengeEnabledForPlayer(SETTING_HARDCORE, target))
+        {
+            ChatHandler(player->GetSession()).SendSysMessage("You cannot trade with players in hardcore mode.");
+
+            return false;
+        }
+
+        return true;
     }
 };
 
@@ -348,6 +458,25 @@ public:
     void OnLevelChanged(Player* player, uint8 oldlevel) override
     {
         ChallengeMode::OnLevelChanged(player, oldlevel);
+    }
+
+    bool CanInitTrade(Player* player, Player* target) override
+    {
+        if (sChallengeModes->challengeEnabledForPlayer(SETTING_SELF_CRAFTED, player))
+        {
+            ChatHandler(player->GetSession()).SendSysMessage("You cannot trade with other players while in self-crafted mode.");
+
+            return false;
+        }
+
+        if (sChallengeModes->challengeEnabledForPlayer(SETTING_SELF_CRAFTED, target))
+        {
+            ChatHandler(player->GetSession()).SendSysMessage("You cannot trade with players in self-crafted mode.");
+
+            return false;
+        }
+
+        return true;
     }
 };
 
