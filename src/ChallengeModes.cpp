@@ -12,6 +12,19 @@ ChallengeModes* ChallengeModes::instance()
     return &instance;
 }
 
+void ChallengeModes::TryMarkDirty(Player* player)
+{
+    if (!player)
+    {
+        return;
+    }
+
+    if (player->IsInWorld())
+    {
+        player->UpdatePlayerSetting("mod-challenge-modes", SETTING_MARK_DIRTY, 1);
+    }
+}
+
 bool ChallengeModes::challengeEnabledForPlayer(ChallengeModeSettings setting, Player* player) const
 {
     if (!enabled() || !challengeEnabled(setting))
@@ -241,6 +254,7 @@ public:
 
     void OnGiveXP(Player* player, uint32& amount, Unit* /*victim*/) override
     {
+        sChallengeModes->TryMarkDirty(player);
         if (!sChallengeModes->challengeEnabledForPlayer(settingName, player))
         {
             return;
@@ -400,6 +414,8 @@ public:
 
         auto player = session->GetPlayer();
 
+        sChallengeModes->TryMarkDirty(player);
+
         auto isHardcore = player->GetPlayerSetting("mod-challenge-modes", SETTING_HARDCORE).value == 1;
         auto isSelfCrafted = player->GetPlayerSetting("mod-challenge-modes", SETTING_SELF_CRAFTED).value == 1;
 
@@ -453,6 +469,14 @@ public:
 
         ChatHandler(player->GetSession()).SendSysMessage(ss.str());
     }
+
+    void OnLootItem(Player* player, Item* /*item*/, uint32 /*count*/, ObjectGuid /*lootguid*/) { sChallengeModes->TryMarkDirty(player); }
+    void OnStoreNewItem(Player* player, Item* /*item*/, uint32 /*count*/) { sChallengeModes->TryMarkDirty(player); }
+    void OnCreateItem(Player* player, Item* /*item*/, uint32 /*count*/) { sChallengeModes->TryMarkDirty(player); }
+    void OnQuestRewardItem(Player* player, Item* /*item*/, uint32 /*count*/) { sChallengeModes->TryMarkDirty(player); }
+    void OnGroupRollRewardItem(Player* player, Item* /*item*/, uint32 /*count*/, RollVote /*voteType*/, Roll* /*roll*/) { sChallengeModes->TryMarkDirty(player); }
+    void OnMoneyChanged(Player* player, int32& /*amount*/) { sChallengeModes->TryMarkDirty(player); }
+    void OnAfterStoreOrEquipNewItem(Player* player, uint32 /*vendorslot*/, Item* /*item*/, uint8 /*count*/, uint8 /*bag*/, uint8 /*slot*/, ItemTemplate const* /*pProto*/, Creature* /*pVendor*/, VendorItem const* /*crItem*/, bool /*bStore*/) { sChallengeModes->TryMarkDirty(player); }
 };
 
 class ChallengeGuildScripts : public GuildScript
@@ -462,12 +486,19 @@ public:
 
     bool CanGuildSendBankList(Guild const* /*guild*/, WorldSession* session, uint8 /*tabId*/, bool /*sendAllSlots*/) override
     {
+        if (!session)
+        {
+            return true;
+        }
+
         if (!session->GetPlayer())
         {
             return true;
         }
 
         auto player = session->GetPlayer();
+
+        sChallengeModes->TryMarkDirty(player);
 
         auto isHardcore = player->GetPlayerSetting("mod-challenge-modes", SETTING_HARDCORE).value == 1;
         auto isSelfCrafted = player->GetPlayerSetting("mod-challenge-modes", SETTING_SELF_CRAFTED).value == 1;
@@ -875,6 +906,13 @@ public:
 
     bool OnGossipHello(Player* player, GameObject* go) override
     {
+        bool isDirty = playerSettingEnabled(player, SETTING_MARK_DIRTY);
+        if (isDirty)
+        {
+            ChatHandler(player->GetSession()).SendSysMessage("Your character is not fresh, do not loot items or money before activiting this setting.");
+            return false;
+        }
+
         if (sChallengeModes->challengeEnabled(SETTING_HARDCORE) && !playerSettingEnabled(player, SETTING_HARDCORE) && !playerSettingEnabled(player, SETTING_SEMI_HARDCORE))
         {
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, "Enable Hardcore Mode", 0, SETTING_HARDCORE);
