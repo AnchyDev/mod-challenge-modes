@@ -364,7 +364,7 @@ public:
             return false;
         }
 
-        if (sChallengeModes->challengeEnabled(SETTING_HARDCORE) && HasPlayerSetting(playerSettings, "mod-challenge-modes", SETTING_SELF_CRAFTED))
+        if (sChallengeModes->challengeEnabled(SETTING_SELF_CRAFTED) && HasPlayerSetting(playerSettings, "mod-challenge-modes", SETTING_SELF_CRAFTED))
         {
             ChatHandler(player->GetSession()).SendSysMessage("You can't send mail to self-crafted players.");
             return false;
@@ -375,6 +375,38 @@ public:
 
 private:
     ChallengeModeSettings settingName;
+};
+
+class ChallengeMiscScripts : public MiscScript
+{
+public:
+    ChallengeMiscScripts() : MiscScript("ChallengeMiscScripts") { }
+    bool CanSendAuctionHello(WorldSession const* session, ObjectGuid /*guid*/, Creature* /*creature*/)
+    {
+        if (!session->GetPlayer())
+        {
+            return true;
+        }
+
+        auto player = session->GetPlayer();
+
+        auto isHardcore = player->GetPlayerSetting("mod-challenge-modes", SETTING_HARDCORE).value == 1;
+        auto isSelfCrafted = player->GetPlayerSetting("mod-challenge-modes", SETTING_SELF_CRAFTED).value == 1;
+
+        if (isHardcore)
+        {
+            ChatHandler(player->GetSession()).SendSysMessage("You cannot use the auction house in hardcore mode.");
+            return false;
+        }
+
+        if (isSelfCrafted)
+        {
+            ChatHandler(player->GetSession()).SendSysMessage("You cannot use the auction house in self-crafted mode.");
+            return false;
+        }
+
+        return true;
+    }
 };
 
 class ChallengeMiscPlayerScripts : public PlayerScript
@@ -864,4 +896,5 @@ void AddSC_mod_challenge_modes()
     new ChallengeMode_QuestXpOnly();
     new ChallengeMode_IronMan();
     new ChallengeMiscPlayerScripts();
+    new ChallengeMiscScripts();
 }
