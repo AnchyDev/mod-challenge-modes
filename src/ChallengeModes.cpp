@@ -455,6 +455,39 @@ public:
     }
 };
 
+class ChallengeGuildScripts : public GuildScript
+{
+public:
+    ChallengeGuildScripts() : GuildScript("ChallengeGuildScripts") { }
+
+    bool CanGuildSendBankList(Guild const* /*guild*/, WorldSession* session, uint8 /*tabId*/, bool /*sendAllSlots*/) override
+    {
+        if (!session->GetPlayer())
+        {
+            return true;
+        }
+
+        auto player = session->GetPlayer();
+
+        auto isHardcore = player->GetPlayerSetting("mod-challenge-modes", SETTING_HARDCORE).value == 1;
+        auto isSelfCrafted = player->GetPlayerSetting("mod-challenge-modes", SETTING_SELF_CRAFTED).value == 1;
+
+        if (isHardcore)
+        {
+            ChatHandler(player->GetSession()).SendSysMessage("You cannot use the guild bank in hardcore mode.");
+            return false;
+        }
+
+        if (isSelfCrafted)
+        {
+            ChatHandler(player->GetSession()).SendSysMessage("You cannot use the guild bank in self-crafted mode.");
+            return false;
+        }
+
+        return true;
+    }
+};
+
 class ChallengeMode_Hardcore : public ChallengeMode
 {
 public:
@@ -907,4 +940,5 @@ void AddSC_mod_challenge_modes()
     new ChallengeMode_IronMan();
     new ChallengeMiscPlayerScripts();
     new ChallengeMiscScripts();
+    new ChallengeGuildScripts();
 }
