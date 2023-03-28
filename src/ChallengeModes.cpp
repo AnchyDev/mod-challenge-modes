@@ -4,6 +4,7 @@
 
 #include "ChallengeModes.h"
 #include "Tokenize.h"
+#include "Player.h"
 
 ChallengeModes* ChallengeModes::instance()
 {
@@ -18,6 +19,31 @@ bool ChallengeModes::challengeEnabledForPlayer(ChallengeModeSettings setting, Pl
         return false;
     }
     return player->GetPlayerSetting("mod-challenge-modes", setting).value;
+}
+
+std::string ChallengeModes::GetChallengeNameFromEnum(uint8 value)
+{
+    switch (value)
+    {
+    case SETTING_HARDCORE:
+        return "Hardcore";
+    case SETTING_SEMI_HARDCORE:
+        return "Semi-Hardcore";
+    case SETTING_SELF_CRAFTED:
+        return "Self-Crafted";
+    case SETTING_ITEM_QUALITY_LEVEL:
+        return "Low Quality Items";
+    case SETTING_SLOW_XP_GAIN:
+        return "Slow XP";
+    case SETTING_VERY_SLOW_XP_GAIN:
+        return "Very Slow XP";
+    case SETTING_QUEST_XP_ONLY:
+        return "Quest XP Only";
+    case SETTING_IRON_MAN:
+        return "Iron Man";
+    }
+
+    return "ERROR";
 }
 
 bool ChallengeModes::challengeEnabled(ChallengeModeSettings setting) const
@@ -349,6 +375,42 @@ public:
 
 private:
     ChallengeModeSettings settingName;
+};
+
+class ChallengeMiscPlayerScripts : public PlayerScript
+{
+public:
+    ChallengeMiscPlayerScripts() : PlayerScript("ChallengeMiscPlayerScripts") { }
+
+    void OnLogin(Player* player) override
+    {
+        if (!player)
+        {
+            return;
+        }
+
+        std::stringstream ss;
+        ss << "Challenge Modes Enabled: ";
+
+        uint8 enabledCount = 0;
+        for (uint8 i = 0; i < SETTING_MODE_MAX; ++i)
+        {
+            auto setting = player->GetPlayerSetting("mod-challenge-modes", i);
+            if (setting.value == 1)
+            {
+                ss << sChallengeModes->GetChallengeNameFromEnum(i);
+                ss << ", ";
+                enabledCount++;
+            }
+        }
+
+        if (enabledCount == 0)
+        {
+            return;
+        }
+
+        ChatHandler(player->GetSession()).SendSysMessage(ss.str());
+    }
 };
 
 class ChallengeMode_Hardcore : public ChallengeMode
@@ -801,4 +863,5 @@ void AddSC_mod_challenge_modes()
     new ChallengeMode_VerySlowXpGain();
     new ChallengeMode_QuestXpOnly();
     new ChallengeMode_IronMan();
+    new ChallengeMiscPlayerScripts();
 }

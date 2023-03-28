@@ -22,7 +22,8 @@ enum ChallengeModeSettings
     SETTING_SLOW_XP_GAIN       = 4,
     SETTING_VERY_SLOW_XP_GAIN  = 5,
     SETTING_QUEST_XP_ONLY      = 6,
-    SETTING_IRON_MAN           = 7
+    SETTING_IRON_MAN           = 7,
+    SETTING_MODE_MAX           = 8
 };
 
 enum AllowedProfessions
@@ -79,6 +80,7 @@ public:
     [[nodiscard]] bool challengeEnabled(ChallengeModeSettings setting) const;
     [[nodiscard]] float getXpBonusForChallenge(ChallengeModeSettings setting) const;
     bool challengeEnabledForPlayer(ChallengeModeSettings setting, Player* player) const;
+    std::string GetChallengeNameFromEnum(uint8 value);
     [[nodiscard]] const std::unordered_map<uint8, uint32> *getTitleMapForChallenge(ChallengeModeSettings setting) const;
     [[nodiscard]] const std::unordered_map<uint8, uint32> *getTalentMapForChallenge(ChallengeModeSettings setting) const;
     [[nodiscard]] const std::unordered_map<uint8, uint32> *getItemMapForChallenge(ChallengeModeSettings setting) const;
