@@ -477,6 +477,7 @@ public:
     void OnGroupRollRewardItem(Player* player, Item* /*item*/, uint32 /*count*/, RollVote /*voteType*/, Roll* /*roll*/) { sChallengeModes->TryMarkDirty(player); }
     void OnMoneyChanged(Player* player, int32& /*amount*/) { sChallengeModes->TryMarkDirty(player); }
     void OnAfterStoreOrEquipNewItem(Player* player, uint32 /*vendorslot*/, Item* /*item*/, uint8 /*count*/, uint8 /*bag*/, uint8 /*slot*/, ItemTemplate const* /*pProto*/, Creature* /*pVendor*/, VendorItem const* /*crItem*/, bool /*bStore*/) { sChallengeModes->TryMarkDirty(player); }
+    bool CanInitTrade(Player* player, Player* target) { sChallengeModes->TryMarkDirty(player); sChallengeModes->TryMarkDirty(target); return true; }
 };
 
 class ChallengeGuildScripts : public GuildScript
