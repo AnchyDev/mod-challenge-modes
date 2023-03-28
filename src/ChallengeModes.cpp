@@ -346,28 +346,38 @@ public:
 
     bool CanSendMail(Player* player, ObjectGuid receiverGUID, ObjectGuid /*mailbox*/, std::string& /*subject*/, std::string& /*body*/, uint32 /*money*/, uint32 /*COD*/, Item* /*item*/)
     {
-        auto playerSettings = GetPlayerSettingsFromDB(receiverGUID);
-
-        if (!playerSettings)
-        {
-            return true;
-        }
-
         if (!sChallengeModes->enabled())
         {
             return true;
         }
 
-        if (sChallengeModes->challengeEnabled(SETTING_HARDCORE) && HasPlayerSetting(playerSettings, "mod-challenge-modes", SETTING_HARDCORE))
+        auto targetPlayer = ObjectAccessor::FindPlayer(receiverGUID);
+
+        // Load offline player settings.
+        PlayerSettingMap* playerSettings = nullptr;
+        if (!targetPlayer)
         {
-            ChatHandler(player->GetSession()).SendSysMessage("You can't send mail to hardcore players.");
-            return false;
+            playerSettings = GetPlayerSettingsFromDB(receiverGUID);
         }
 
-        if (sChallengeModes->challengeEnabled(SETTING_SELF_CRAFTED) && HasPlayerSetting(playerSettings, "mod-challenge-modes", SETTING_SELF_CRAFTED))
+        if (sChallengeModes->challengeEnabled(SETTING_HARDCORE))
         {
-            ChatHandler(player->GetSession()).SendSysMessage("You can't send mail to self-crafted players.");
-            return false;
+            if (targetPlayer && targetPlayer->GetPlayerSetting("mod-challenge-modes", SETTING_HARDCORE).value == 1 ||
+                playerSettings && HasPlayerSetting(playerSettings, "mod-challenge-modes", SETTING_HARDCORE) /* Fallback to DB */)
+            {
+                ChatHandler(player->GetSession()).SendSysMessage("You can't send mail to hardcore players.");
+                return false;
+            }
+        }
+
+        if (sChallengeModes->challengeEnabled(SETTING_SELF_CRAFTED))
+        {
+            if (targetPlayer && targetPlayer->GetPlayerSetting("mod-challenge-modes", SETTING_SELF_CRAFTED).value == 1 ||
+                playerSettings && HasPlayerSetting(playerSettings, "mod-challenge-modes", SETTING_SELF_CRAFTED) /* Fallback to DB */)
+            {
+                ChatHandler(player->GetSession()).SendSysMessage("You can't send mail to self-crafted players.");
+                return false;
+            }
         }
 
         return true;
