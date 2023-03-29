@@ -271,7 +271,17 @@ public:
         const std::unordered_map<uint8, uint32> *titleRewardMap = sChallengeModes->getTitleMapForChallenge(settingName);
         const std::unordered_map<uint8, uint32> *talentRewardMap = sChallengeModes->getTalentMapForChallenge(settingName);
         const std::unordered_map<uint8, uint32> *itemRewardMap = sChallengeModes->getItemMapForChallenge(settingName);
-        uint8 level = player->getLevel();
+        uint8 level = player->GetLevel();
+
+        // Disable modes at 80
+        if (level == 80)
+        {
+            for (uint8 i = 0; i < SETTING_MODE_MAX; ++i)
+            {
+                player->UpdatePlayerSetting("mod-challenge-modes", i, 0);
+            }
+        }
+
         if (mapContainsKey(titleRewardMap, level))
         {
             CharTitlesEntry const* titleInfo = sCharTitlesStore.LookupEntry(titleRewardMap->at(level));
