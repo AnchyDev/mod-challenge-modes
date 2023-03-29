@@ -276,10 +276,7 @@ public:
         // Disable modes at 80
         if (level == 80)
         {
-            for (uint8 i = 0; i < SETTING_MODE_MAX; ++i)
-            {
-                player->UpdatePlayerSetting("mod-challenge-modes", i, 0);
-            }
+            player->UpdatePlayerSetting("mod-challenge-modes", settingName, 0);
         }
 
         if (mapContainsKey(titleRewardMap, level))
