@@ -383,8 +383,8 @@ public:
 
         if (sChallengeModes->challengeEnabled(SETTING_HARDCORE))
         {
-            if (targetPlayer && targetPlayer->GetPlayerSetting("mod-challenge-modes", SETTING_HARDCORE).value == 1 ||
-                playerSettings && HasPlayerSetting(playerSettings, "mod-challenge-modes", SETTING_HARDCORE) /* Fallback to DB */)
+            if ((targetPlayer && targetPlayer->GetPlayerSetting("mod-challenge-modes", SETTING_HARDCORE).value == 1) ||
+                (playerSettings && HasPlayerSetting(playerSettings, "mod-challenge-modes", SETTING_HARDCORE)) /* Fallback to DB */)
             {
                 ChatHandler(player->GetSession()).SendSysMessage("You can't send mail to hardcore players.");
                 return false;
@@ -393,8 +393,8 @@ public:
 
         if (sChallengeModes->challengeEnabled(SETTING_SELF_CRAFTED))
         {
-            if (targetPlayer && targetPlayer->GetPlayerSetting("mod-challenge-modes", SETTING_SELF_CRAFTED).value == 1 ||
-                playerSettings && HasPlayerSetting(playerSettings, "mod-challenge-modes", SETTING_SELF_CRAFTED) /* Fallback to DB */)
+            if ((targetPlayer && targetPlayer->GetPlayerSetting("mod-challenge-modes", SETTING_SELF_CRAFTED).value == 1) ||
+                (playerSettings && HasPlayerSetting(playerSettings, "mod-challenge-modes", SETTING_SELF_CRAFTED)) /* Fallback to DB */)
             {
                 ChatHandler(player->GetSession()).SendSysMessage("You can't send mail to self-crafted players.");
                 return false;
