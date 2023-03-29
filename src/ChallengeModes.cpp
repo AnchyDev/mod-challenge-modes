@@ -365,7 +365,7 @@ public:
         return settingVector.at(index).value == 1;
     }
 
-    bool CanSendMail(Player* player, ObjectGuid receiverGUID, ObjectGuid /*mailbox*/, std::string& /*subject*/, std::string& /*body*/, uint32 /*money*/, uint32 /*COD*/, Item* /*item*/)
+    bool CanSendMail(Player* player, ObjectGuid receiverGUID, ObjectGuid /*mailbox*/, std::string& /*subject*/, std::string& /*body*/, uint32 /*money*/, uint32 /*COD*/, Item* /*item*/) override
     {
         if (!sChallengeModes->enabled())
         {
@@ -412,7 +412,7 @@ class ChallengeMiscScripts : public MiscScript
 {
 public:
     ChallengeMiscScripts() : MiscScript("ChallengeMiscScripts") { }
-    bool CanSendAuctionHello(WorldSession const* session, ObjectGuid /*guid*/, Creature* /*creature*/)
+    bool CanSendAuctionHello(WorldSession const* session, ObjectGuid /*guid*/, Creature* /*creature*/) override
     {
         if (!session->GetPlayer())
         {
@@ -477,14 +477,14 @@ public:
         ChatHandler(player->GetSession()).SendSysMessage(ss.str());
     }
 
-    void OnLootItem(Player* player, Item* /*item*/, uint32 /*count*/, ObjectGuid /*lootguid*/) { sChallengeModes->TryMarkDirty(player); }
-    void OnStoreNewItem(Player* player, Item* /*item*/, uint32 /*count*/) { sChallengeModes->TryMarkDirty(player); }
-    void OnCreateItem(Player* player, Item* /*item*/, uint32 /*count*/) { sChallengeModes->TryMarkDirty(player); }
-    void OnQuestRewardItem(Player* player, Item* /*item*/, uint32 /*count*/) { sChallengeModes->TryMarkDirty(player); }
-    void OnGroupRollRewardItem(Player* player, Item* /*item*/, uint32 /*count*/, RollVote /*voteType*/, Roll* /*roll*/) { sChallengeModes->TryMarkDirty(player); }
-    void OnMoneyChanged(Player* player, int32& /*amount*/) { sChallengeModes->TryMarkDirty(player); }
-    void OnAfterStoreOrEquipNewItem(Player* player, uint32 /*vendorslot*/, Item* /*item*/, uint8 /*count*/, uint8 /*bag*/, uint8 /*slot*/, ItemTemplate const* /*pProto*/, Creature* /*pVendor*/, VendorItem const* /*crItem*/, bool /*bStore*/) { sChallengeModes->TryMarkDirty(player); }
-    bool CanInitTrade(Player* player, Player* target) { sChallengeModes->TryMarkDirty(player); sChallengeModes->TryMarkDirty(target); return true; }
+    void OnLootItem(Player* player, Item* /*item*/, uint32 /*count*/, ObjectGuid /*lootguid*/) override { sChallengeModes->TryMarkDirty(player); }
+    void OnStoreNewItem(Player* player, Item* /*item*/, uint32 /*count*/) override { sChallengeModes->TryMarkDirty(player); }
+    void OnCreateItem(Player* player, Item* /*item*/, uint32 /*count*/) override { sChallengeModes->TryMarkDirty(player); }
+    void OnQuestRewardItem(Player* player, Item* /*item*/, uint32 /*count*/) override { sChallengeModes->TryMarkDirty(player); }
+    void OnGroupRollRewardItem(Player* player, Item* /*item*/, uint32 /*count*/, RollVote /*voteType*/, Roll* /*roll*/) override { sChallengeModes->TryMarkDirty(player); }
+    void OnMoneyChanged(Player* player, int32& /*amount*/) override { sChallengeModes->TryMarkDirty(player); }
+    void OnAfterStoreOrEquipNewItem(Player* player, uint32 /*vendorslot*/, Item* /*item*/, uint8 /*count*/, uint8 /*bag*/, uint8 /*slot*/, ItemTemplate const* /*pProto*/, Creature* /*pVendor*/, VendorItem const* /*crItem*/, bool /*bStore*/) override { sChallengeModes->TryMarkDirty(player); }
+    bool CanInitTrade(Player* player, Player* target) override { sChallengeModes->TryMarkDirty(player); sChallengeModes->TryMarkDirty(target); return true; }
 };
 
 class ChallengeGuildScripts : public GuildScript
